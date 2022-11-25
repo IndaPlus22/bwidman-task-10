@@ -15,7 +15,7 @@ load_board(BoardFileName, Board) :-
 % the stone located at (Row, Column) is alive or dead.
 is_alive(Row, Column, Board) :-
     nth1_2d(Row, Column, Board, Stone),     % Get stone at x,y
-    liberty(Row, Column, Board, Stone).
+    pathfind(Row, Column, Board, Stone, []).
 
 % Checks if any surrounding stone is empty
 liberty(Row, Column, Board, e) :-
@@ -28,17 +28,22 @@ liberty(Row, Column, Board, e) :-
     nth1_2d(Row, Left, Board, e);
     nth1_2d(Row, Right, Board, e)),
     !.
-liberty(Row, Column, Board, Stone) :-
+
+pathfind(Row, Column, Board, Stone, Visited) :-
+    \+ member((Row, Column), Visited),          % Make sure cell has not already been checked
+    append(Visited, (Row, Column), NewVisited), % Add current cell to list of visited cells
+
     liberty(Row, Column, Board, e);         % Check for empty slot around stone
-    (nth1_2d(Row, Column, Board, Stone),    % Check if new slot if same color (redundant on first iteration)
+    (nth1_2d(Row, Column, Board, Stone),    % Check if new slot is same color (redundant on first iteration)
     Up is Row - 1,
     Down is Row + 1,
     Left is Column - 1,
     Right is Column + 1,
-    liberty(Up, Column, Board, Stone);
-    liberty(Down, Column, Board, Stone);
-    liberty(Row, Left, Board, Stone);
-    liberty(Row, Right, Board, Stone)).
+    % Branch in all orthogonal directions
+    pathfind(Up, Column, Board, Stone, NewVisited);
+    pathfind(Down, Column, Board, Stone, NewVisited);
+    pathfind(Row, Left, Board, Stone, NewVisited);
+    pathfind(Row, Right, Board, Stone, NewVisited)).
 
 main(Row, Column) :-
     load_board('alive_example.txt', Board),     % Load example
